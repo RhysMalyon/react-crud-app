@@ -7,7 +7,7 @@ function App() {
   const [users, setUsers] = useState([])
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [user, setUser] = useState('')
+  const [userId, setUserId] = useState('')
 
   useEffect(() => {
     const getData = async () => {
@@ -41,16 +41,21 @@ function App() {
     )
   })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const id = posts.length ? posts[posts.length - 1].id + 1 : 1
-    const newPost = { id, title, user, body }
-    
-    const allPosts = [...posts, newPost]
-    setPosts(allPosts)
-    setTitle('')
-    setBody('')
-    setUser('')
+    const newPost = { id, title, userId, body }
+    try {
+      const response = await api.post('/posts', newPost)
+      console.log(response.data)
+      const allPosts = [...posts, response.data]
+      setPosts(allPosts)
+      setTitle('')
+      setBody('')
+      setUserId('')
+    } catch (err) {
+      console.err(`Error: ${err.message}`)
+    }
   }
 
   const handleTitleChange = (e) => {
@@ -62,7 +67,7 @@ function App() {
   }
   
   const handleUserChange = (e) => {
-    setUser(e.target.value)
+    setUserId(parseInt(e.target.value))
   }
 
   return (
@@ -74,6 +79,7 @@ function App() {
           name="title"
           value={title}
           onChange={handleTitleChange}
+          required
         />
         <input
           type="textarea"
@@ -81,13 +87,14 @@ function App() {
           name="body"
           value={body}
           onChange={handleBodyChange}
+          required
         />
         <select
           onChange={handleUserChange}
           name="user"
-          value={user}
+          value={userId}
+          required
         >
-          <option value="">--- Choose ---</option>
           {users.map(user => {
             return (
               <option key={user.id} value={user.id}>{user.name}</option>
