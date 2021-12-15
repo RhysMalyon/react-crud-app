@@ -30,17 +30,6 @@ function App() {
     return foundUser[0] ? foundUser[0].name : null
   }
 
-  const postsDisplay = posts.map(post => {
-    const { id, title, userId } = post
-    
-    return (
-      <div key={id}>
-        <h2>{id}. {title}</h2>
-        <p>{findUser(userId)}</p>
-      </div>
-    )
-  })
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     const id = posts.length ? posts[posts.length - 1].id + 1 : 1
@@ -70,6 +59,28 @@ function App() {
     setUserId(parseInt(e.target.value))
   }
 
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/posts/${id}`)
+      const filteredPosts = posts.filter(post => post.id !== id)
+      setPosts(filteredPosts)
+    } catch (err) {
+      console.log(`Error: ${err.message}`)
+    }
+  }
+
+  const postsDisplay = posts.map(post => {
+    const { id, title, userId } = post
+    
+    return (
+      <div key={id}>
+        <h2>{id}. {title}</h2>
+        <p>{findUser(userId)}</p>
+        <button onClick={() => handleDelete(id)}>Delete</button>
+      </div>
+    )
+  })
+
   return (
     <div className="App">
       <form onSubmit={handleSubmit}>
@@ -95,6 +106,7 @@ function App() {
           value={userId}
           required
         >
+          <option value="">--- Choose ---</option>
           {users.map(user => {
             return (
               <option key={user.id} value={user.id}>{user.name}</option>
