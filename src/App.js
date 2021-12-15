@@ -5,6 +5,9 @@ import api from './api/api';
 function App() {
   const [posts, setPosts] = useState([])
   const [users, setUsers] = useState([])
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [userId, setUserId] = useState('')
 
   useEffect(() => {
     const getData = async () => {
@@ -27,16 +30,80 @@ function App() {
     return foundUser[0] ? foundUser[0].name : null
   }
 
+  const postsDisplay = posts.map(post => {
+    const { id, title, userId } = post
+    
+    return (
+      <div key={id}>
+        <h2>{id}. {title}</h2>
+        <p>{findUser(userId)}</p>
+      </div>
+    )
+  })
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const id = posts.length ? posts[posts.length - 1].id + 1 : 1
+    const newPost = { id, title, userId, body }
+    try {
+      const response = await api.post('/posts', newPost)
+      console.log(response.data)
+      const allPosts = [...posts, response.data]
+      setPosts(allPosts)
+      setTitle('')
+      setBody('')
+      setUserId('')
+    } catch (err) {
+      console.err(`Error: ${err.message}`)
+    }
+  }
+
+  const handleTitleChange = (e) => {
+    setTitle(e.target.value)
+  }
+
+  const handleBodyChange = (e) => {
+    setBody(e.target.value)
+  }
+  
+  const handleUserChange = (e) => {
+    setUserId(parseInt(e.target.value))
+  }
+
   return (
     <div className="App">
-      {posts.map(post => {
-        return (
-          <div key={post.id}>
-            <h2>{post.title}</h2>
-            <p>{findUser(post.userId)}</p>
-          </div>
-        )
-      })}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Title"
+          name="title"
+          value={title}
+          onChange={handleTitleChange}
+          required
+        />
+        <input
+          type="textarea"
+          placeholder="What you want to write about..."
+          name="body"
+          value={body}
+          onChange={handleBodyChange}
+          required
+        />
+        <select
+          onChange={handleUserChange}
+          name="user"
+          value={userId}
+          required
+        >
+          {users.map(user => {
+            return (
+              <option key={user.id} value={user.id}>{user.name}</option>
+            )
+          })}
+        </select>
+        <button>Submit</button>
+      </form>
+      {postsDisplay}
     </div>
   );
 }
