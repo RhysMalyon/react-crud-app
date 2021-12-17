@@ -5,6 +5,7 @@ import api from './api/api';
 function App() {
   const [posts, setPosts] = useState([])
   const [users, setUsers] = useState([])
+  const [postId, setPostId] = useState('')
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [userId, setUserId] = useState('')
@@ -35,26 +36,32 @@ function App() {
     e.preventDefault()
 
     if (editStatus) {
-      let updatePosts = posts.map((post) => {
-        return post.id === id
-          ? { ...post, title, userId, body }
-          : post
-      })
-      setPosts(updatePosts)
-      setEditStatus(false)
-    }
-    const id = posts.length ? posts[posts.length - 1].id + 1 : 1
-    const newPost = { id, title, userId, body }
-    try {
-      const response = await api.post('/posts', newPost)
-      console.log(response.data)
-      const allPosts = [...posts, response.data]
-      setPosts(allPosts)
-      setTitle('')
-      setBody('')
-      setUserId('')
-    } catch (err) {
-      console.err(`Error: ${err.message}`)
+      const id = postId
+      const updatedPost = { id, title, body, userId }
+      try {
+        const response = await api.put(`/posts/${id}`, updatedPost)
+        setPosts(posts.map(post => post.id === id ? { ...response.data } : post))
+        setTitle('')
+        setBody('')
+        setUserId('')
+        setEditStatus(false)
+      } catch (err) {
+        console.err(`Error: ${err.message}`)
+      }
+    } else if (!editStatus) {
+      const id = posts.length ? posts[posts.length - 1].id + 1 : 1
+      const newPost = { id, title, userId, body }
+      try {
+        const response = await api.post('/posts', newPost)
+        console.log(response.data)
+        const allPosts = [...posts, response.data]
+        setPosts(allPosts)
+        setTitle('')
+        setBody('')
+        setUserId('')
+      } catch (err) {
+        console.err(`Error: ${err.message}`)
+      }
     }
   }
 
@@ -84,10 +91,12 @@ function App() {
     let editPost = posts.find(post => post.id === id)
     let { userId, title, body } = editPost
     setUserId(userId)
+    setPostId(id)
+    console.log(id)
     setTitle(title)
     setBody(body)
     setEditStatus(true)
-    setUserId(id)
+    setUserId(userId)
   }
 
   const postsDisplay = posts.map(post => {
@@ -98,6 +107,7 @@ function App() {
         <h2>{id}. {title}</h2>
         <p>{findUser(userId)}</p>
         <button onClick={() => handleDelete(id)}>Delete</button>
+        <button onClick={() => handleEdit(id)}>Edit</button>
       </div>
     )
   })
@@ -134,7 +144,7 @@ function App() {
             )
           })}
         </select>
-        <button>Submit</button>
+        <button>{editStatus ? 'Save Edit' : 'Submit'}</button>
       </form>
       {postsDisplay}
     </div>
