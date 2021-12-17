@@ -8,6 +8,7 @@ function App() {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [userId, setUserId] = useState('')
+  const [editStatus, setEditStatus] = useState(false)
 
   useEffect(() => {
     const getData = async () => {
@@ -32,6 +33,16 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (editStatus) {
+      let updatePosts = posts.map((post) => {
+        return post.id === id
+          ? { ...post, title, userId, body }
+          : post
+      })
+      setPosts(updatePosts)
+      setEditStatus(false)
+    }
     const id = posts.length ? posts[posts.length - 1].id + 1 : 1
     const newPost = { id, title, userId, body }
     try {
@@ -67,6 +78,16 @@ function App() {
     } catch (err) {
       console.log(`Error: ${err.message}`)
     }
+  }
+
+  const handleEdit = (id) => {
+    let editPost = posts.find(post => post.id === id)
+    let { userId, title, body } = editPost
+    setUserId(userId)
+    setTitle(title)
+    setBody(body)
+    setEditStatus(true)
+    setUserId(id)
   }
 
   const postsDisplay = posts.map(post => {
